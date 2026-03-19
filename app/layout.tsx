@@ -16,6 +16,9 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" className={vintageFont.variable}>
+      <head>
+        <script src="https://telegram.org/js/telegram-web-app.js" async></script>
+      </head>
       <body className="bg-[#f4ecd8] text-[#1a1a1a] min-h-screen" suppressHydrationWarning>{children}</body>
     </html>
   );
