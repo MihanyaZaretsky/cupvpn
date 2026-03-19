@@ -616,9 +616,11 @@ export default function VpnDashboard() {
               
               {/* Profile Section */}
               <div className="w-full bg-[#f5e6c8] p-6 border-[3px] border-ink-black shadow-[3px_3px_0_#6e3b8b] mb-6 flex items-center gap-4 relative z-30">
-                <div className="w-16 h-16 rounded-xl border-[3px] border-ink-black overflow-hidden bg-[#d2b98b] flex-shrink-0 flex items-center justify-center">
-                  {tgUser?.photo_url ? (
-                    <img src={tgUser.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                <div className="w-16 h-16 rounded-xl border-[3px] border-ink-black overflow-hidden bg-gradient-to-br from-[#d6453d] to-[#6e3b8b] flex-shrink-0 flex items-center justify-center">
+                  {tgUser ? (
+                    <span className="text-2xl font-bold text-white">
+                      {tgUser.first_name?.[0]?.toUpperCase() || '?'}{tgUser.last_name?.[0]?.toUpperCase() || ''}
+                    </span>
                   ) : (
                     <span className="text-4xl">🎲</span>
                   )}
@@ -659,7 +661,7 @@ export default function VpnDashboard() {
                   </span>
                 </div>
                 <button 
-                  onClick={() => window.open('https://t.me/support', '_blank')}
+                  onClick={() => window.open('https://t.me/Solanammaster', '_blank')}
                   className="px-6 py-3 border-[3px] border-ink-black font-vintage text-lg transition-all bg-[#d6453d] text-white shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:scale-105 active:scale-95"
                 >
                   {dict.supportBtn}
