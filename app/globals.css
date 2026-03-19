@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-paper-white: #fdfbf7;
+  --color-ink-black: #1a1a1a;
+  --color-ink-light: #4a4a4a;
+  --color-cup-red: #d93829;
+  --color-mug-blue: #3b82f6;
+  --color-vintage-bg: #f4ecd8;
+  --font-vintage: var(--font-vintage), serif;
+}
+
+@layer utilities {
+  .uneven-border {
+    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  }
+  .uneven-border-btn {
+    border-radius: 15px 225px 15px 255px/255px 15px 225px 15px;
+  }
+  .sunburst-bg {
+    background: repeating-conic-gradient(
+      from 0deg,
+      transparent 0deg 15deg,
+      rgba(0, 0, 0, 0.04) 15deg 30deg
+    );
+  }
+  .animate-spin-slow {
+    animation: spin-slow 60s linear infinite;
+  }
+  .animate-noise {
+    animation: noise-shift 0.2s steps(2) infinite;
+  }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes noise-shift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-5%, -5%); }
+}
