@@ -150,6 +150,7 @@ export default function VpnDashboard() {
   const [activeTab, setActiveTab] = useState<'home' | 'plans' | 'settings'>('home');
   const [lang, setLang] = useState<'ru' | 'en'>('ru');
   const [tgUser, setTgUser] = useState<any>(null);
+  const [tgUserPhoto, setTgUserPhoto] = useState<string | null>(null);
   const [kingAnim, setKingAnim] = useState(0);
   
   // Pricing state
@@ -257,9 +258,18 @@ export default function VpnDashboard() {
       const tg = window.Telegram.WebApp;
       tg.ready();
       if (tg.initDataUnsafe?.user) {
-        Promise.resolve().then(() => {
-          if (mounted) setTgUser(tg.initDataUnsafe.user);
-        });
+        const user = tg.initDataUnsafe.user;
+        if (mounted) setTgUser(user);
+        
+        // Fetch user photo from Bot API
+        fetch(`/api/user/photo?user_id=${user.id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (mounted && data.photo_url) {
+              setTgUserPhoto(data.photo_url);
+            }
+          })
+          .catch(() => {});
       }
     }
 
@@ -617,7 +627,9 @@ export default function VpnDashboard() {
               {/* Profile Section */}
               <div className="w-full bg-[#f5e6c8] p-6 border-[3px] border-ink-black shadow-[3px_3px_0_#6e3b8b] mb-6 flex items-center gap-4 relative z-30">
                 <div className="w-16 h-16 rounded-xl border-[3px] border-ink-black overflow-hidden bg-gradient-to-br from-[#d6453d] to-[#6e3b8b] flex-shrink-0 flex items-center justify-center">
-                  {tgUser ? (
+                  {tgUserPhoto ? (
+                    <img src={tgUserPhoto} alt="Profile" className="w-full h-full object-cover" />
+                  ) : tgUser ? (
                     <span className="text-2xl font-bold text-white">
                       {tgUser.first_name?.[0]?.toUpperCase() || '?'}{tgUser.last_name?.[0]?.toUpperCase() || ''}
                     </span>
