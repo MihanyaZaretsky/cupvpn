@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ 
-      pay_link: data.data.pay_link,
+      pay_link: data.data.payment_url,
       track_id: data.data.track_id 
     });
   } catch (error) {
