@@ -134,6 +134,9 @@ declare global {
       WebApp: {
         ready: () => void;
         expand: () => void;
+        platform?: string;
+        version?: string;
+        colorScheme?: string;
         initDataUnsafe: {
           user?: {
             id: number;
@@ -275,18 +278,33 @@ export default function VpnDashboard() {
       const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand(); // Expand to full height
-      console.log('Telegram WebApp ready');
-      console.log('initDataUnsafe:', tg.initDataUnsafe);
+      
+      // Log full WebApp object for debugging
+      console.log('=== Telegram WebApp Debug ===');
+      console.log('Platform:', tg.platform);
+      console.log('Version:', tg.version);
+      console.log('ColorScheme:', tg.colorScheme);
+      console.log('initDataUnsafe full:', JSON.stringify(tg.initDataUnsafe, null, 2));
       
       if (tg.initDataUnsafe?.user) {
         const user = tg.initDataUnsafe.user;
-        console.log('User data:', user);
+        console.log('=== User Data ===');
+        console.log('Full user object:', JSON.stringify(user, null, 2));
+        console.log('user.id:', user.id);
+        console.log('user.first_name:', user.first_name);
+        console.log('user.last_name:', user.last_name);
+        console.log('user.username:', user.username);
+        console.log('user.photo_url:', user.photo_url);
+        console.log('user.language_code:', user.language_code);
+        
         if (mounted) {
           setTgUser(user);
           // photo_url is available directly in WebAppUser (Bot API 8.0+)
           if (user.photo_url) {
             setTgUserPhoto(user.photo_url);
-            console.log('Photo URL from WebApp:', user.photo_url);
+            console.log('Photo URL set:', user.photo_url);
+          } else {
+            console.log('WARNING: photo_url is NOT available in user object');
           }
         }
       } else {
