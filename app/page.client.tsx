@@ -344,6 +344,9 @@ export default function VpnDashboard() {
       ></div>
 
       <div className="w-full max-w-md mx-auto flex flex-col h-full relative z-10">
+
+      {/* Main Content Area */}
+      <main className="flex-1 p-6 flex flex-col items-center justify-start relative z-10 overflow-y-auto">
         {/* Header */}
       {activeTab === 'home' && (
         <header className="shrink-0 p-6 pb-2 text-center relative z-10">
@@ -359,9 +362,6 @@ export default function VpnDashboard() {
           <div className={`h-1 w-32 bg-ink-black mx-auto mt-4 rounded-full border-2 border-ink-black`}></div>
         </header>
       )}
-
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 flex flex-col items-center justify-start relative z-10 overflow-y-auto">
         <AnimatePresence mode="wait">
           {activeTab === 'home' ? (
             <motion.div 
