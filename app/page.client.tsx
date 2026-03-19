@@ -838,15 +838,18 @@ export default function VpnDashboard() {
                         body: JSON.stringify({ months, userId: tgUser?.id || 0 }),
                       });
                       const data = await res.json();
+                      console.log('Crypto API response:', data);
                       if (data.pay_link) {
                         window.open(data.pay_link, '_blank');
                         setShowPaymentModal(false);
                       } else {
-                        alert('Ошибка создания счёта: ' + (data.error || 'Неизвестная ошибка'));
+                        const errorMsg = data.error || 'Неизвестная ошибка';
+                        const details = data.details ? `\n${JSON.stringify(data.details)}` : '';
+                        alert('Ошибка создания счёта: ' + errorMsg + details);
                       }
                     } catch (err) {
                       console.error('Crypto payment error:', err);
-                      alert('Ошибка при создании счёта');
+                      alert('Ошибка при создании счёта: ' + err);
                     }
                   }}
                   className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]`}

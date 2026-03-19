@@ -1,33 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const OXAPAY_API_KEY = process.env.OXAPAY_API_KEY;
-
-interface OxaPayResponse {
-  status: number;
-  message: string;
-  data?: {
-    track_id: string;
-    pay_link: string;
-    invoice_url: string;
-  };
-  error?: {
-    code: number;
-    message: string;
-  };
-}
-
 export async function POST(request: NextRequest) {
+  const OXAPAY_API_KEY = process.env.OXAPAY_API_KEY;
+
+  console.log('Crypto API called, API key exists:', !!OXAPAY_API_KEY);
+
   if (!OXAPAY_API_KEY) {
-    return NextResponse.json({ error: 'OxaPay API key not configured' }, { status: 500 });
+    console.error('OXAPAY_API_KEY not set');
+    return NextResponse.json({ 
+      error: 'OxaPay API key not configured. Add OXAPAY_API_KEY to environment variables.' 
+    }, { status: 500 });
   }
 
   try {
     const body = await request.json();
     const { months, userId } = body;
 
-    // Calculate price: 50 Stars = ~$1, so 1 month = $2
-    const pricePerMonth = 2; // USD
+    console.log('Creating invoice for months:', months, 'userId:', userId);
+
+    // Calculate price: $2 per month
+    const pricePerMonth = 2;
     const amount = pricePerMonth * months;
+
+    const requestBody = {
+      amount: amount,
+      currency: 'USD',
+      lifetime: 60,
+      fee_paid_by_payer: 1,
+      order_id: `cupvpn_${months}_${userId}_${Date.now()}`,
+      description: `CupVPN subscription for ${months} month(s)`,
+    };
+
+    console.log('OxaPay request body:', requestBody);
 
     const response = await fetch('https://api.oxapay.com/v1/payment/invoice', {
       method: 'POST',
@@ -35,24 +39,17 @@ export async function POST(request: NextRequest) {
         'merchant_api_key': OXAPAY_API_KEY,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        amount: amount,
-        currency: 'USD',
-        lifetime: 60, // 60 minutes
-        fee_paid_by_payer: 1,
-        callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com'}/api/crypto/callback`,
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com'}?payment=success`,
-        order_id: `cupvpn_${months}_${userId}_${Date.now()}`,
-        description: `CupVPN subscription for ${months} month(s)`,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
-    const data: OxaPayResponse = await response.json();
+    const data = await response.json();
+    console.log('OxaPay response:', JSON.stringify(data, null, 2));
 
     if (data.status !== 200 || !data.data) {
       console.error('OxaPay error:', data);
       return NextResponse.json({ 
-        error: data.error?.message || 'Failed to create invoice' 
+        error: data.message || data.error?.message || 'Failed to create invoice',
+        details: data
       }, { status: 500 });
     }
 
@@ -62,6 +59,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('OxaPay invoice error:', error);
-    return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to create invoice',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
