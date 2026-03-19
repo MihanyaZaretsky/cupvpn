@@ -131,7 +131,20 @@ const FloatingFlame = ({ delay, duration, left, size }: { delay: number, duratio
 declare global {
   interface Window {
     Telegram?: {
-      WebApp: any;
+      WebApp: {
+        ready: () => void;
+        initDataUnsafe: {
+          user?: {
+            id: number;
+            first_name: string;
+            last_name?: string;
+            username?: string;
+            language_code?: string;
+          };
+        };
+        openInvoice: (url: string, callback?: (status: string) => void) => void;
+        close: () => void;
+      };
     };
   }
 }
@@ -254,23 +267,34 @@ export default function VpnDashboard() {
   // Fetch initial status & TG user
   useEffect(() => {
     let mounted = true;
+    
+    // Initialize Telegram WebApp
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
       tg.ready();
+      console.log('Telegram WebApp ready');
+      console.log('initDataUnsafe:', tg.initDataUnsafe);
+      
       if (tg.initDataUnsafe?.user) {
         const user = tg.initDataUnsafe.user;
+        console.log('User data:', user);
         if (mounted) setTgUser(user);
         
         // Fetch user photo from Bot API
         fetch(`/api/user/photo?user_id=${user.id}`)
           .then(res => res.json())
           .then(data => {
+            console.log('Photo response:', data);
             if (mounted && data.photo_url) {
               setTgUserPhoto(data.photo_url);
             }
           })
-          .catch(() => {});
+          .catch(err => console.error('Photo fetch error:', err));
+      } else {
+        console.log('No user data in initDataUnsafe');
       }
+    } else {
+      console.log('Telegram WebApp not available');
     }
 
     fetch('/api/vpn')
@@ -758,25 +782,59 @@ export default function VpnDashboard() {
               <h3 className="font-vintage text-2xl text-center mb-6">{dict.payTitle}</h3>
               
               <div className="space-y-4">
-                <button className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]`}>
-                  <div className="w-10 h-10 bg-blue-100 rounded-full border-2 border-ink-black flex items-center justify-center text-blue-500">
-                    <StarIcon className="w-8 h-8" />
+                <button 
+                  onClick={async () => {
+                    if (!window.Telegram?.WebApp) {
+                      alert('Telegram WebApp не доступен');
+                      return;
+                    }
+                    try {
+                      const res = await fetch('/api/invoice', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ months, userId: tgUser?.id || 0 }),
+                      });
+                      const data = await res.json();
+                      if (data.invoiceLink) {
+                        window.Telegram.WebApp.openInvoice(data.invoiceLink, (status) => {
+                          if (status === 'paid') {
+                            setShowPaymentModal(false);
+                            alert('✅ Оплата прошла успешно!');
+                          } else if (status === 'cancelled') {
+                            console.log('Payment cancelled');
+                          }
+                        });
+                      } else {
+                        alert('Ошибка создания счёта: ' + (data.error || 'Неизвестная ошибка'));
+                      }
+                    } catch (err) {
+                      console.error('Invoice error:', err);
+                      alert('Ошибка при создании счёта');
+                    }
+                  }}
+                  className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]`}
+                >
+                  <div className="w-10 h-10 bg-yellow-100 rounded-full border-2 border-ink-black flex items-center justify-center">
+                    <span className="text-xl">⭐</span>
                   </div>
-                  <span className="font-bold text-lg uppercase tracking-wide">Telegram Stars</span>
+                  <div className="flex flex-col items-start">
+                    <span className="font-bold text-lg uppercase tracking-wide">Telegram Stars</span>
+                    <span className="text-xs text-gray-500">{months * 50} Stars</span>
+                  </div>
                 </button>
 
-                <button className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]`}>
+                <button className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px] opacity-50 cursor-not-allowed`}>
                   <div className="w-10 h-10 bg-green-100 rounded-full border-2 border-ink-black flex items-center justify-center text-green-600">
                     <WalletIcon className="w-8 h-8" />
                   </div>
-                  <span className="font-bold text-lg uppercase tracking-wide">СБП</span>
+                  <span className="font-bold text-lg uppercase tracking-wide">СБП (скоро)</span>
                 </button>
 
-                <button className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]`}>
+                <button className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px] opacity-50 cursor-not-allowed`}>
                   <div className="w-10 h-10 bg-orange-100 rounded-full border-2 border-ink-black flex items-center justify-center text-orange-500">
                     <CryptoIcon className="w-8 h-8" />
                   </div>
-                  <span className="font-bold text-lg uppercase tracking-wide">{dict.crypto}</span>
+                  <span className="font-bold text-lg uppercase tracking-wide">{dict.crypto} (скоро)</span>
                 </button>
               </div>
             </motion.div>
