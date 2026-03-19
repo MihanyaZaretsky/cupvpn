@@ -829,11 +829,35 @@ export default function VpnDashboard() {
                   <span className="font-bold text-lg uppercase tracking-wide">СБП (скоро)</span>
                 </button>
 
-                <button className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px] opacity-50 cursor-not-allowed`}>
+                <button 
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/crypto', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ months, userId: tgUser?.id || 0 }),
+                      });
+                      const data = await res.json();
+                      if (data.pay_link) {
+                        window.open(data.pay_link, '_blank');
+                        setShowPaymentModal(false);
+                      } else {
+                        alert('Ошибка создания счёта: ' + (data.error || 'Неизвестная ошибка'));
+                      }
+                    } catch (err) {
+                      console.error('Crypto payment error:', err);
+                      alert('Ошибка при создании счёта');
+                    }
+                  }}
+                  className={`w-full bg-paper-white p-4 flex items-center gap-4 ${cartoonBorder} shadow-[4px_4px_0px_0px_var(--color-ink-black)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_var(--color-ink-black)] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]`}
+                >
                   <div className="w-10 h-10 bg-orange-100 rounded-full border-2 border-ink-black flex items-center justify-center text-orange-500">
                     <CryptoIcon className="w-8 h-8" />
                   </div>
-                  <span className="font-bold text-lg uppercase tracking-wide">{dict.crypto} (скоро)</span>
+                  <div className="flex flex-col items-start">
+                    <span className="font-bold text-lg uppercase tracking-wide">{dict.crypto}</span>
+                    <span className="text-xs text-gray-500">${months * 2} USDT</span>
+                  </div>
                 </button>
               </div>
             </motion.div>
