@@ -133,6 +133,7 @@ declare global {
     Telegram?: {
       WebApp: {
         ready: () => void;
+        expand: () => void;
         initDataUnsafe: {
           user?: {
             id: number;
@@ -140,6 +141,7 @@ declare global {
             last_name?: string;
             username?: string;
             language_code?: string;
+            photo_url?: string;
           };
         };
         openInvoice: (url: string, callback?: (status: string) => void) => void;
@@ -272,24 +274,21 @@ export default function VpnDashboard() {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
       tg.ready();
+      tg.expand(); // Expand to full height
       console.log('Telegram WebApp ready');
       console.log('initDataUnsafe:', tg.initDataUnsafe);
       
       if (tg.initDataUnsafe?.user) {
         const user = tg.initDataUnsafe.user;
         console.log('User data:', user);
-        if (mounted) setTgUser(user);
-        
-        // Fetch user photo from Bot API
-        fetch(`/api/user/photo?user_id=${user.id}`)
-          .then(res => res.json())
-          .then(data => {
-            console.log('Photo response:', data);
-            if (mounted && data.photo_url) {
-              setTgUserPhoto(data.photo_url);
-            }
-          })
-          .catch(err => console.error('Photo fetch error:', err));
+        if (mounted) {
+          setTgUser(user);
+          // photo_url is available directly in WebAppUser (Bot API 8.0+)
+          if (user.photo_url) {
+            setTgUserPhoto(user.photo_url);
+            console.log('Photo URL from WebApp:', user.photo_url);
+          }
+        }
       } else {
         console.log('No user data in initDataUnsafe');
       }
